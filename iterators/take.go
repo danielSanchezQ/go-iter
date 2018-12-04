@@ -1,26 +1,29 @@
 package iterators
 
-type dropWhileIterator struct {
-	f    Predicate
-	iter Iterator
+type takeIterator struct {
+	iter    Iterator
+	current int
+	n       int
 }
 
-func DropWhile(f Predicate, iter Iterator) Iterator {
-	return &dropWhileIterator{f, iter}
+func Take(n int, iter Iterator) Iterator {
+	return &takeIterator{iter: iter, current: 0, n: n}
 }
 
-func (dw *dropWhileIterator) Next() (val interface{}, err error) {
-	for val, err = dw.iter.Next(); dw.f(val) && err != nil; {
-
+func (ti *takeIterator) Next() (interface{}, error) {
+	if ti.current > ti.n {
+		return nil, StopIteration
 	}
+	val, err := ti.iter.Next()
 	if err != nil {
 		return nil, StopIteration
 	}
+	ti.current++
 	return val, nil
 }
 
-func (dw *dropWhileIterator) Fork() Iterator {
-	return DropWhile(dw.f, dw.iter.Fork())
+func (ti *takeIterator) Fork() Iterator {
+	return &takeIterator{iter: ti.iter.Fork(), current: ti.current, n: ti.n}
 }
 
 type takeWhileIterator struct {
